@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ratio de Café</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,500;0,600;0,700;1,500;1,600&family=JetBrains+Mono:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root{
+    --bg:#17110c;
+    --surface:#231a13;
+    --surface-2:#2b2018;
+    --hairline:#3c2d1f;
+    --cream:#f3e8d8;
+    --muted:#a99883;
+    --copper:#c1682f;
+    --gold:#d9a24c;
+    --steam:#6fa98c;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 20% 0%, rgba(193,104,47,0.10), transparent 45%),
+      radial-gradient(circle at 90% 10%, rgba(111,169,140,0.06), transparent 40%),
+      var(--bg);
+    color:var(--cream);
+    font-family:'Inter', sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:20px 14px 60px;
+  }
+  .app{
+    width:100%;
+    max-width:460px;
+  }
+
+  /* Header */
+  header{
+    padding:6px 4px 22px;
+  }
+  .eyebrow{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--copper);
+  }
+  h1{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:30px;
+    margin:6px 0 4px;
+    letter-spacing:-0.01em;
+  }
+  .sub{
+    color:var(--muted);
+    font-size:13.5px;
+    line-height:1.5;
+    max-width:34ch;
+  }
+
+  /* Method chips */
+  .chips{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding:4px 2px 16px;
+    scrollbar-width:none;
+  }
+  .chips::-webkit-scrollbar{display:none;}
+  .chip{
+    flex:0 0 auto;
+    padding:9px 14px;
+    border-radius:100px;
+    border:1px solid var(--hairline);
+    background:var(--surface);
+    color:var(--muted);
+    font-size:13px;
+    font-weight:500;
+    cursor:pointer;
+    white-space:nowrap;
+    transition:all .15s ease;
+  }
+  .chip:hover{ border-color:var(--copper); color:var(--cream); }
+  .chip.active{
+    background:var(--copper);
+    border-color:var(--copper);
+    color:#1a1108;
+    font-weight:600;
+  }
+
+  /* Card */
+  .card{
+    background:var(--surface);
+    border:1px solid var(--hairline);
+    border-radius:18px;
+    padding:22px 20px;
+    margin-bottom:16px;
+  }
+  .card-title{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin:0 0 16px;
+  }
+
+  /* Stamp */
+  .stamp-row{
+    display:flex;
+    align-items:center;
+    gap:18px;
+    margin-bottom:6px;
+  }
+  .stamp{
+    flex:0 0 auto;
+    width:92px;
+    height:92px;
+    border-radius:50%;
+    border:2px dashed var(--gold);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    transform:rotate(-6deg);
+  }
+  .stamp-inner{
+    font-family:'Fraunces', serif;
+    font-style:italic;
+    font-weight:600;
+    font-size:20px;
+    color:var(--gold);
+    text-align:center;
+    line-height:1.15;
+  }
+  .stamp-inner small{
+    display:block;
+    font-family:'JetBrains Mono', monospace;
+    font-style:normal;
+    font-size:9px;
+    letter-spacing:0.1em;
+    color:var(--muted);
+    margin-top:2px;
+  }
+  .method-note{
+    font-size:12.5px;
+    color:var(--muted);
+    line-height:1.5;
+  }
+  .method-note b{ color:var(--cream); font-weight:600; }
+
+  /* Slider */
+  .slider-wrap{ margin:18px 0 4px; }
+  input[type="range"]{
+    -webkit-appearance:none;
+    width:100%;
+    height:3px;
+    background:var(--hairline);
+    border-radius:4px;
+    outline:none;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none;
+    width:18px; height:18px;
+    border-radius:50%;
+    background:var(--copper);
+    border:3px solid var(--cream);
+    cursor:pointer;
+    margin-top:-1px;
+  }
+  input[type="range"]::-moz-range-thumb{
+    width:18px; height:18px;
+    border-radius:50%;
+    background:var(--copper);
+    border:3px solid var(--cream);
+    cursor:pointer;
+  }
+  .slider-labels{
+    display:flex;
+    justify-content:space-between;
+    font-family:'JetBrains Mono', monospace;
+    font-size:10.5px;
+    color:var(--muted);
+    margin-top:6px;
+  }
+
+  /* Inputs */
+  .inputs{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+    margin-top:18px;
+  }
+  .field{
+    background:var(--surface-2);
+    border:1px solid var(--hairline);
+    border-radius:12px;
+    padding:12px 14px;
+  }
+  .field label{
+    display:block;
+    font-family:'JetBrains Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin-bottom:6px;
+  }
+  .field .row{
+    display:flex;
+    align-items:baseline;
+    gap:5px;
+  }
+  .field input{
+    width:100%;
+    background:transparent;
+    border:none;
+    outline:none;
+    color:var(--cream);
+    font-family:'JetBrains Mono', monospace;
+    font-size:22px;
+    font-weight:600;
+    padding:0;
+  }
+  .field .unit{
+    font-family:'JetBrains Mono', monospace;
+    color:var(--muted);
+    font-size:14px;
+  }
+
+  /* Timer */
+  .timer-face{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:8px 0 4px;
+  }
+  .clock{
+    font-family:'JetBrains Mono', monospace;
+    font-size:52px;
+    font-weight:700;
+    letter-spacing:0.01em;
+    color:var(--cream);
+    transition:color .3s ease;
+  }
+  .clock.in-range{ color:var(--steam); }
+  .target-text{
+    font-size:12.5px;
+    color:var(--muted);
+    margin-top:2px;
+    text-align:center;
+    min-height:16px;
+  }
+  .target-text.hit{ color:var(--steam); font-weight:600; }
+  .controls{
+    display:flex;
+    gap:10px;
+    margin-top:20px;
+    width:100%;
+  }
+  .btn{
+    flex:1;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:7px;
+    padding:12px 10px;
+    border-radius:12px;
+    border:1px solid var(--hairline);
+    background:var(--surface-2);
+    color:var(--cream);
+    font-family:'Inter', sans-serif;
+    font-weight:600;
+    font-size:13.5px;
+    cursor:pointer;
+    transition:all .15s ease;
+  }
+  .btn.primary{
+    background:var(--copper);
+    border-color:var(--copper);
+    color:#1a1108;
+  }
+  .btn:active{ transform:scale(0.97); }
+  .btn svg{ width:15px; height:15px; }
+
+  /* Reference table */
+  .ref-toggle{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    cursor:pointer;
+    user-select:none;
+  }
+  .ref-toggle .arrow{
+    transition:transform .2s ease;
+    color:var(--muted);
+  }
+  .ref-toggle.open .arrow{ transform:rotate(180deg); }
+  .ref-table{
+    margin-top:14px;
+    display:none;
+  }
+  .ref-table.show{ display:block; }
+  .ref-row{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:9px 0;
+    border-top:1px solid var(--hairline);
+    font-size:13px;
+  }
+  .ref-row .name{ color:var(--cream); font-weight:500; }
+  .ref-row .val{
+    font-family:'JetBrains Mono', monospace;
+    color:var(--gold);
+    font-size:12.5px;
+  }
+
+  footer{
+    text-align:center;
+    color:var(--muted);
+    font-size:11px;
+    margin-top:8px;
+    line-height:1.6;
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="eyebrow">Barra de precisión</div>
+    <h1>Ratio de Café</h1>
+    <div class="sub">Elegí el método, ajustá la proporción y usá el cronómetro mientras extraés.</div>
+  </header>
+
+  <div class="chips" id="chips"></div>
+
+  <!-- Ratio & pesos -->
+  <div class="card">
+    <p class="card-title">Proporción</p>
+    <div class="stamp-row">
+      <div class="stamp">
+        <div class="stamp-inner" id="stampText">1<br><small>—</small><br>18</div>
+      </div>
+      <div class="method-note" id="methodNote">Ejemplo clásico: <b>20 g</b> de café por <b>360 g</b> de agua.</div>
+    </div>
+
+    <div class="slider-wrap">
+      <input type="range" id="ratioSlider" min="1" max="20" step="0.5" value="18">
+      <div class="slider-labels"><span id="rangeMin">1 : 1</span><span id="rangeMax">1 : 20</span></div>
+    </div>
+
+    <div class="inputs">
+      <div class="field">
+        <label>Café</label>
+        <div class="row">
+          <input type="number" id="coffeeInput" value="20" step="0.5" inputmode="decimal">
+          <span class="unit">g</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Agua</label>
+        <div class="row">
+          <input type="number" id="waterInput" value="360" step="1" inputmode="decimal">
+          <span class="unit">g</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Timer -->
+  <div class="card">
+    <p class="card-title">Cronómetro</p>
+    <div class="timer-face">
+      <div class="clock" id="clock">00:00</div>
+      <div class="target-text" id="targetText">Tiempo sugerido: 2:30 – 3:30</div>
+      <div class="controls">
+        <button class="btn primary" id="playBtn">
+          <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          <span id="playLabel">Iniciar</span>
+        </button>
+        <button class="btn" id="resetBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 4v5h5"/></svg>
+          Reiniciar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reference table -->
+  <div class="card">
+    <div class="ref-toggle" id="refToggle">
+      <p class="card-title" style="margin:0">Tabla de ratios comunes</p>
+      <svg class="arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="ref-table" id="refTable"></div>
+  </div>
+
+  <footer>Basado en rangos de referencia de la SCA y guías de tostadores especializados.<br>Ajustá siempre a gusto — estos son puntos de partida.</footer>
+</div>
+
+<script>
+const methods = [
+  { id:'custom', name:'Personalizado', min:5, max:22, step:0.5, def:18, coffeeDef:20, time:null,
+    note:'Ajustá la proporción libremente. Ejemplo clásico: <b>20 g</b> de café por <b>360 g</b> de agua (1:18).' },
+  { id:'ristretto', name:'Ristretto', min:1, max:1.5, step:0.1, def:1.3, coffeeDef:18, time:[15,20],
+    note:'Extracción corta y concentrada. Rango habitual <b>1:1</b> a <b>1:1.5</b>.' },
+  { id:'espresso', name:'Espresso', min:1.5, max:2.5, step:0.1, def:2, coffeeDef:18, time:[25,30],
+    note:'El estándar de café: <b>1:2</b> es la proporción más usada en cafeterías.' },
+  { id:'lungo', name:'Lungo', min:3, max:4, step:0.1, def:3.5, coffeeDef:18, time:[35,45],
+    note:'Espresso alargado, más diluido. Rango <b>1:3</b> a <b>1:4</b>.' },
+  { id:'americano', name:'Americano', min:10, max:16, step:0.5, def:14, coffeeDef:18, time:[25,30],
+    note:'Ratio del café respecto al total (shot + agua caliente añadida), aprox. <b>1:10</b> a <b>1:16</b>.' },
+  { id:'frenchpress', name:'Prensa Francesa', min:12, max:15, step:0.5, def:15, coffeeDef:30, time:[240,240],
+    note:'Inmersión completa. Rango <b>1:12</b> a <b>1:15</b>; reposo de 4 minutos.' },
+  { id:'v60', name:'V60 / Pour-over', min:15, max:17, step:0.5, def:16, coffeeDef:15, time:[150,210],
+    note:'La "ratio dorada" de la SCA ronda <b>1:16</b> a <b>1:17</b>.' },
+  { id:'chemex', name:'Chemex', min:16, max:17, step:0.5, def:16.5, coffeeDef:30, time:[240,300],
+    note:'Filtro grueso, extracción limpia. Rango <b>1:16</b> a <b>1:17</b>.' },
+  { id:'aeropress', name:'AeroPress', min:12, max:18, step:0.5, def:15, coffeeDef:16, time:[60,120],
+    note:'Método versátil, admite un rango amplio: <b>1:12</b> a <b>1:18</b>.' },
+  { id:'moka', name:'Moka / Cafetera Italiana', min:7, max:10, step:0.5, def:8, coffeeDef:20, time:[240,300],
+    note:'Presión baja, ratio concentrado <b>1:7</b> a <b>1:10</b>.' },
+  { id:'coldbrew', name:'Cold Brew (concentrado)', min:4, max:8, step:0.5, def:5, coffeeDef:100, time:null,
+    note:'Reposo largo en frío, <b>12–24 horas</b>. Ratio concentrado <b>1:4</b> a <b>1:8</b>, luego se diluye.' },
+];
+
+let current = methods[0];
+let coffeeG = current.coffeeDef;
+let ratio = current.def;
+
+const chipsEl = document.getElementById('chips');
+const slider = document.getElementById('ratioSlider');
+const coffeeInput = document.getElementById('coffeeInput');
+const waterInput = document.getElementById('waterInput');
+const stampText = document.getElementById('stampText');
+const methodNote = document.getElementById('methodNote');
+const rangeMin = document.getElementById('rangeMin');
+const rangeMax = document.getElementById('rangeMax');
+const targetText = document.getElementById('targetText');
+const clockEl = document.getElementById('clock');
+
+function fmtRatio(r){
+  return (r % 1 === 0) ? r.toFixed(0) : r.toFixed(1);
+}
+
+function renderChips(){
+  chipsEl.innerHTML = '';
+  methods.forEach(m => {
+    const chip = document.createElement('div');
+    chip.className = 'chip' + (m.id === current.id ? ' active' : '');
+    chip.textContent = m.name;
+    chip.onclick = () => selectMethod(m.id);
+    chipsEl.appendChild(chip);
+  });
+}
+
+function selectMethod(id){
+  current = methods.find(m => m.id === id);
+  ratio = current.def;
+  coffeeG = current.coffeeDef;
+  slider.min = current.min;
+  slider.max = current.max;
+  slider.step = current.step;
+  slider.value = ratio;
+  rangeMin.textContent = '1 : ' + fmtRatio(current.min);
+  rangeMax.textContent = '1 : ' + fmtRatio(current.max);
+  methodNote.innerHTML = current.note;
+  targetText.textContent = current.time
+    ? 'Tiempo sugerido: ' + fmtTime(current.time[0]) + (current.time[1] !== current.time[0] ? ' – ' + fmtTime(current.time[1]) : '')
+    : (current.id === 'coldbrew' ? 'Este método se mide en horas, no con el cronómetro.' : 'Sin tiempo estándar — ajustá a gusto.');
+  updateFromCoffee();
+  renderChips();
+}
+
+function fmtTime(s){
+  const m = Math.floor(s/60), sec = s%60;
+  return sec === 0 ? m + ':00' : m + ':' + String(sec).padStart(2,'0');
+}
+
+function updateStamp(){
+  stampText.innerHTML = '1<br><small>—</small><br>' + fmtRatio(ratio);
+}
+
+function updateFromCoffee(){
+  const water = coffeeG * ratio;
+  coffeeInput.value = coffeeG;
+  waterInput.value = Math.round(water);
+  updateStamp();
+}
+
+function updateFromWater(w){
+  coffeeG = w / ratio;
+  coffeeInput.value = round1(coffeeG);
+  waterInput.value = w;
+  updateStamp();
+}
+
+function round1(n){ return Math.round(n*10)/10; }
+
+slider.addEventListener('input', () => {
+  ratio = parseFloat(slider.value);
+  updateFromCoffee();
+});
+
+coffeeInput.addEventListener('input', () => {
+  const v = parseFloat(coffeeInput.value);
+  if(!isNaN(v) && v > 0){
+    coffeeG = v;
+    updateFromCoffee();
+  }
+});
+
+waterInput.addEventListener('input', () => {
+  const v = parseFloat(waterInput.value);
+  if(!isNaN(v) && v > 0){
+    updateFromWater(v);
+  }
+});
+
+// Reference table
+const refTable = document.getElementById('refTable');
+const refToggle = document.getElementById('refToggle');
+methods.filter(m => m.id !== 'custom').forEach(m => {
+  const row = document.createElement('div');
+  row.className = 'ref-row';
+  const rangeStr = m.min === m.max ? '1:' + fmtRatio(m.min) : '1:' + fmtRatio(m.min) + '–1:' + fmtRatio(m.max);
+  row.innerHTML = '<span class="name">' + m.name + '</span><span class="val">' + rangeStr + '</span>';
+  refTable.appendChild(row);
+});
+refToggle.addEventListener('click', () => {
+  refTable.classList.toggle('show');
+  refToggle.classList.toggle('open');
+});
+
+// Timer
+let seconds = 0, timerInterval = null, running = false;
+const playBtn = document.getElementById('playBtn');
+const playIcon = document.getElementById('playIcon');
+const playLabel = document.getElementById('playLabel');
+const resetBtn = document.getElementById('resetBtn');
+
+function renderClock(){
+  const m = Math.floor(seconds/60), s = seconds%60;
+  clockEl.textContent = String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  if(current.time && seconds >= current.time[0] && seconds <= current.time[1] + 5){
+    clockEl.classList.add('in-range');
+  } else {
+    clockEl.classList.remove('in-range');
+  }
+}
+
+function toggleTimer(){
+  if(running){
+    clearInterval(timerInterval);
+    running = false;
+    playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+    playLabel.textContent = 'Iniciar';
+  } else {
+    timerInterval = setInterval(() => {
+      seconds++;
+      renderClock();
+    }, 1000);
+    running = true;
+    playIcon.innerHTML = '<path d="M6 5h4v14H6zM14 5h4v14h-4z"/>';
+    playLabel.textContent = 'Pausar';
+  }
+}
+
+playBtn.addEventListener('click', toggleTimer);
+resetBtn.addEventListener('click', () => {
+  clearInterval(timerInterval);
+  running = false;
+  seconds = 0;
+  renderClock();
+  playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+  playLabel.textContent = 'Iniciar';
+});
+
+// Init
+selectMethod('custom');
+renderClock();
+</script>
+</body>
+</html>
