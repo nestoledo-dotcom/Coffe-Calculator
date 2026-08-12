@@ -348,6 +348,118 @@
     min-width:64px;
   }
 
+  /* Kasuya 4:6 */
+  .kasuya-toggle{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-top:16px;
+    padding:10px 12px;
+    border-radius:12px;
+    border:1px solid var(--hairline);
+    background:var(--surface-2);
+    cursor:pointer;
+    font-size:12.5px;
+    font-weight:600;
+    color:var(--muted);
+    transition:all .15s ease;
+  }
+  .kasuya-toggle svg{ width:15px; height:15px; flex:0 0 auto; }
+  .kasuya-toggle.on{
+    color:var(--cream);
+    border-color:var(--steam);
+    background:rgba(111,169,140,0.10);
+  }
+  .kasuya-toggle .arrow{ margin-left:auto; transition:transform .2s ease; }
+  .kasuya-toggle.on .arrow{ transform:rotate(180deg); }
+
+  .kasuya-panel{
+    display:none;
+    margin-top:14px;
+    padding-top:14px;
+    border-top:1px dashed var(--hairline);
+  }
+  .kasuya-panel.show{ display:block; }
+  .kasuya-intro{
+    font-size:12px;
+    color:var(--muted);
+    line-height:1.55;
+    margin-bottom:14px;
+  }
+  .kasuya-intro b{ color:var(--cream); }
+
+  .roast-row{
+    display:flex;
+    gap:8px;
+    margin-bottom:16px;
+  }
+  .roast-chip{
+    flex:1;
+    text-align:center;
+    padding:8px 6px;
+    border-radius:10px;
+    border:1px solid var(--hairline);
+    background:var(--surface);
+    font-size:11.5px;
+    color:var(--muted);
+    cursor:pointer;
+  }
+  .roast-chip.active{
+    border-color:var(--gold);
+    color:var(--gold);
+    background:rgba(217,162,76,0.08);
+    font-weight:600;
+  }
+  .roast-chip .rc-temp{
+    display:block;
+    font-family:'JetBrains Mono', monospace;
+    font-size:13px;
+    margin-top:2px;
+  }
+
+  .pour-list{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+  }
+  .pour-row{
+    display:grid;
+    grid-template-columns:20px 1fr auto auto;
+    align-items:center;
+    gap:10px;
+    padding:9px 10px;
+    border-radius:10px;
+    background:var(--surface-2);
+    border:1px solid transparent;
+    transition:all .2s ease;
+  }
+  .pour-row.active{
+    border-color:var(--steam);
+    background:rgba(111,169,140,0.10);
+  }
+  .pour-row.done{ opacity:0.45; }
+  .pour-num{
+    font-family:'JetBrains Mono', monospace;
+    font-size:11px;
+    color:var(--copper);
+    font-weight:700;
+  }
+  .pour-desc{
+    font-size:11.5px;
+    color:var(--muted);
+  }
+  .pour-time{
+    font-family:'JetBrains Mono', monospace;
+    font-size:12px;
+    color:var(--muted);
+  }
+  .pour-amt{
+    font-family:'JetBrains Mono', monospace;
+    font-size:14px;
+    font-weight:600;
+    color:var(--cream);
+  }
+
   footer{
     text-align:center;
     color:var(--muted);
@@ -405,6 +517,22 @@
           <span class="unit">g</span>
         </div>
       </div>
+    </div>
+
+    <!-- Kasuya 4:6 toggle (solo visible con V60) -->
+    <div class="kasuya-toggle" id="kasuyaToggle" style="display:none;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 8h1a4 4 0 1 1 0 8h-1M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4z"/><line x1="6" y1="2" x2="6" y2="4"/><line x1="10" y1="2" x2="10" y2="4"/><line x1="14" y1="2" x2="14" y2="4"/></svg>
+      <span>Receta 4:6 de Tetsu Kasuya</span>
+      <svg class="arrow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="kasuya-panel" id="kasuyaPanel">
+      <div class="kasuya-intro">Método del campeón mundial 2016. Divide el agua en <b>5 vertidos iguales cada 45 s</b>: el primer 40% ajusta dulzor/acidez y el 60% restante define el cuerpo. Usá molienda algo más gruesa que en un V60 estándar.</div>
+      <div class="roast-row" id="roastRow">
+        <div class="roast-chip" data-temp="93">Tueste claro<span class="rc-temp">93°C</span></div>
+        <div class="roast-chip active" data-temp="88">Tueste medio<span class="rc-temp">88°C</span></div>
+        <div class="roast-chip" data-temp="83">Tueste oscuro<span class="rc-temp">83°C</span></div>
+      </div>
+      <div class="pour-list" id="pourList"></div>
     </div>
   </div>
 
@@ -487,6 +615,12 @@ const targetText = document.getElementById('targetText');
 const clockEl = document.getElementById('clock');
 const tempVal = document.getElementById('tempVal');
 const tempLabelEl = document.getElementById('tempLabel');
+const kasuyaToggle = document.getElementById('kasuyaToggle');
+const kasuyaPanel = document.getElementById('kasuyaPanel');
+const roastRow = document.getElementById('roastRow');
+const pourList = document.getElementById('pourList');
+let kasuyaOn = false;
+let roastTemp = 88;
 
 function fmtRatio(r){
   return (r % 1 === 0) ? r.toFixed(0) : r.toFixed(1);
@@ -516,6 +650,17 @@ function selectMethod(id){
   methodNote.innerHTML = current.note;
   tempVal.textContent = current.temp[0] === current.temp[1] ? current.temp[0] + '°C' : current.temp[0] + '–' + current.temp[1] + '°C';
   tempLabelEl.textContent = current.tempLabel;
+
+  // Kasuya toggle solo para V60
+  if(current.id === 'v60'){
+    kasuyaToggle.style.display = 'flex';
+  } else {
+    kasuyaToggle.style.display = 'none';
+    kasuyaOn = false;
+    kasuyaToggle.classList.remove('on');
+    kasuyaPanel.classList.remove('show');
+  }
+
   targetText.textContent = current.time
     ? 'Tiempo sugerido: ' + fmtTime(current.time[0]) + (current.time[1] !== current.time[0] ? ' – ' + fmtTime(current.time[1]) : '')
     : (current.id === 'coldbrew' ? 'Este método se mide en horas, no con el cronómetro.' : 'Sin tiempo estándar — ajustá a gusto.');
@@ -537,6 +682,7 @@ function updateFromCoffee(){
   coffeeInput.value = coffeeG;
   waterInput.value = Math.round(water);
   updateStamp();
+  if(kasuyaOn) renderPours();
 }
 
 function updateFromWater(w){
@@ -544,9 +690,77 @@ function updateFromWater(w){
   coffeeInput.value = round1(coffeeG);
   waterInput.value = w;
   updateStamp();
+  if(kasuyaOn) renderPours();
 }
 
 function round1(n){ return Math.round(n*10)/10; }
+
+// Kasuya 4:6
+const pourTimes = [0, 45, 90, 135, 180]; // segundos acumulados de inicio de cada vertido
+
+function renderPours(){
+  const water = coffeeG * ratio;
+  const perPour = water / 5; // 40% en 2 vertidos + 60% en 3 = 5 partes iguales de 20%
+  const descs = [
+    '40% · dulzor y acidez',
+    '40% · dulzor y acidez',
+    '60% · cuerpo',
+    '60% · cuerpo',
+    '60% · cuerpo'
+  ];
+  pourList.innerHTML = '';
+  pourTimes.forEach((t, i) => {
+    const row = document.createElement('div');
+    row.className = 'pour-row';
+    row.id = 'pourRow' + i;
+    row.innerHTML =
+      '<span class="pour-num">' + (i+1) + '</span>' +
+      '<span class="pour-desc">' + descs[i] + '</span>' +
+      '<span class="pour-time">' + fmtTime(t) + '</span>' +
+      '<span class="pour-amt">' + Math.round(perPour) + 'g</span>';
+    pourList.appendChild(row);
+  });
+  highlightPour();
+}
+
+function highlightPour(){
+  if(!kasuyaOn) return;
+  pourTimes.forEach((t, i) => {
+    const row = document.getElementById('pourRow' + i);
+    if(!row) return;
+    row.classList.remove('active','done');
+    const next = pourTimes[i+1];
+    if(seconds >= t && (next === undefined || seconds < next)){
+      row.classList.add('active');
+    } else if(next !== undefined && seconds >= next){
+      row.classList.add('done');
+    } else if(next === undefined && seconds >= t + 30){
+      row.classList.add('done');
+    }
+  });
+}
+
+kasuyaToggle.addEventListener('click', () => {
+  kasuyaOn = !kasuyaOn;
+  kasuyaToggle.classList.toggle('on', kasuyaOn);
+  kasuyaPanel.classList.toggle('show', kasuyaOn);
+  if(kasuyaOn){
+    ratio = 15;
+    slider.value = 15;
+    updateFromCoffee();
+    renderPours();
+  }
+});
+
+roastRow.querySelectorAll('.roast-chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    roastRow.querySelectorAll('.roast-chip').forEach(c => c.classList.remove('active'));
+    chip.classList.add('active');
+    roastTemp = parseInt(chip.dataset.temp);
+    tempVal.textContent = roastTemp + '°C';
+    tempLabelEl.textContent = 'agua (4:6)';
+  });
+});
 
 slider.addEventListener('input', () => {
   ratio = parseFloat(slider.value);
@@ -599,6 +813,7 @@ function renderClock(){
   } else {
     clockEl.classList.remove('in-range');
   }
+  if(kasuyaOn) highlightPour();
 }
 
 function toggleTimer(){
@@ -627,7 +842,6 @@ resetBtn.addEventListener('click', () => {
   playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
   playLabel.textContent = 'Iniciar';
 });
-
 // Init
 selectMethod('custom');
 renderClock();
